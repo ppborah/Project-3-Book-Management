@@ -34,10 +34,24 @@ const isValidPassword = function (password) {
   return true;
 };
 
+ ///////////////// [ OBJECT-ID VALIDATION ] /////////////////
+ const isValidObjectId = function(objectId) {
+  return mongoose.Types.ObjectId.isValid(objectId)
+}
+
+///////////////// [ ISBN VALIDATION ] /////////////////
+const isValidISBN = function(ISBN) {
+  const pattern =/^(?=(?:\D*\d){10}(?:(?:\D*\d){3})?$)[\d-]+$/;
+  return pattern.test(ISBN);  // returns a boolean 
+}
+
+
 module.exports = {
   isValid,
   isValidEmail,
   isValidPhone,
   isValidPincode,
   isValidPassword,
+  isValidObjectId,
+  isValidISBN
 };
