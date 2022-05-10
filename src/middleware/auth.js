@@ -5,28 +5,34 @@ const mongoose = require("mongoose");
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const authentication = async function (req, res, next) {
+  // token sent in request header 'x-api-key'
+  token = req.headers["x-api-key"];
+
+  // if token is not provided
+  if (!token)
+    return res.status(400).send({
+      status: false,
+      msg: "Token required! Please login to generate token",
+    });
+
   try {
-    // token sent in request header 'x-api-key'
-    token = req.headers["x-api-key"];
-
-    // if token is not provided
-    if (!token)
-      return res.status(400).send({
-        status: false,
-        msg: "Token required! Please login to generate token",
-      });
-
     // if token is invalid
-    let decodedToken = jwt.verify(token, "Group14");
-    if (!decodedToken)
+    let decodedToken = jwt.verify(token, "Group14", { ignoreExpiration: true });
+    if (!decodedToken) {
       return res.status(401).send({ status: false, msg: "token is invalid" });
-
+    }
+    if (Date.now() > decodedToken.exp * 1000) {
+      return res.status(401).send({
+        status: false,
+        msg: "Session Expired",
+      });
+    }
     // if token is valid
     req.userId = decodedToken.userId;
 
     next();
   } catch (err) {
-    res.status(500).send({ msg: "Internal Server Error", error: err.message });
+    res.status(401).send({ status: false, msg: "Authentication Failed" });
   }
 };
 
