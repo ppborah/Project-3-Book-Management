@@ -4,10 +4,6 @@ const validator = require("../validator/validation");
 const userModel = require("../models/userModel");
 const reviewModel = require("../models/reviewModel");
 
-
-
-
-
 const createBook = async function (req, res) {
   try {
     const book = req.body;
@@ -237,6 +233,56 @@ const updateBook = async function (req, res) {
   }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
+const deleteBook = async function (req, res) {
+  try {
+    let bookId = req.params.bookId;
 
-module.exports = { getBooks, createBook, getBooksById, updateBook }
+    // bookId VALIDATION: done in authorisation
+
+    // "check" OBJECT will contain a key "isDeleted" and its value of the book document corresponding to the bookId
+    let check = await bookModel.findOne(
+      { _id: bookId },
+      {
+        isDeleted: 1,
+        _id: 0,
+      }
+    );
+
+    //CONDITIONS
+    //CASE-1: bookId does not exist: validation already done in authorisation middleware
+
+    //CASE-2: bookId exists but is deleted
+    if (check && check.isDeleted) {
+      return res.status(404).send({
+        status: false,
+        msg: "We are sorry; Given bookId does not exist", // Due to privacy concerns we are not telling that the blog is deleted
+      });
+    }
+
+    //CASE-3: bookId exists but is not deleted
+    else if (check && !check.isDeleted) {
+      // deletion of blog using findOneAndUpdate
+      await bookModel.findOneAndUpdate(
+        {
+          _id: bookId,
+        },
+        {
+          isDeleted: true,
+          deletedAt: new Date(), //deletedAt is added using Date() constructor
+        }
+      );
+      return res.status(200).send({
+        status: true,
+        msg: "Deletion Successful",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({ msg: "Internal Server Error", error: err.message });
+  }
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+module.exports = { getBooks, createBook, getBooksById, updateBook, deleteBook  }
