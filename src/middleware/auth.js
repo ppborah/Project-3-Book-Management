@@ -23,6 +23,7 @@ const authentication = async function (req, res, next) {
 
     // if token is valid
     req.userId = decodedToken.userId;
+
     next();
   } catch (err) {
     res.status(500).send({ msg: "Internal Server Error", error: err.message });
@@ -33,12 +34,6 @@ const authentication = async function (req, res, next) {
 
 const authorisation = async function (req, res, next) {
   try {
-    // token sent in request header "x-api-key"
-    let token = req.headers["x-api-key"];
-
-    // decoded token using verify method
-    let decodedToken = jwt.verify(token, "Group-14");
-
     // bookId sent through path variable
     let bookId = req.params.bookId;
 
@@ -64,11 +59,11 @@ const authorisation = async function (req, res, next) {
     }
 
     // Authorisation: userId in token is compared with userId against bookId
-    if (decodedToken.userId !== book.userId.toString()) {
+    if (req.userId !== book.userId.toString()) {
       return res
         .status(401)
         .send({ status: false, msg: "Authorisation Failed!" });
-    } else if (decodedToken.userId === book.userId.toString()) {
+    } else if (req.userId === book.userId.toString()) {
       next();
     }
   } catch (err) {
