@@ -15,7 +15,6 @@ const createBook = async function (req, res) {
     // book details sent through request body
     const data = req.body;
 
-    // what is this concept called?
     const { title, excerpt, userId, ISBN, category, subcategory, releasedAt } =
       data;
 
@@ -213,7 +212,15 @@ let getBooks = async function (req, res) {
       },
     ]);
 
-    // if no book satisfies given filters
+      // CASE-1: if isDeleted: true for all existing books / no book exists (in the database)
+    if (!filteredBooks.length) {
+      return res.status(404).send({
+        status: false,
+        msg: "No book exists",
+      });
+    }
+
+    // CASE-2: if no book satisfies given filters
     if (!filteredBooks.length && filtersArr.length !== 1) {
       return res.status(404).send({
         status: false,
@@ -221,7 +228,7 @@ let getBooks = async function (req, res) {
       });
     }
 
-    // if atleast one book satisfies given filter(s) --> if no filters entered: "string interpolation" to use relevant msg
+    // CASE-3: if atleast one book satisfies given filter(s) --> if no filters entered(SUBCASE): "string interpolation" used for relevant msg
     let noFilter = "";
     if (filtersArr.length === 1) {
       noFilter = "(No filters applied!)"; // if no filters entered
