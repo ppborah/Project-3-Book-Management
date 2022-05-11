@@ -15,8 +15,16 @@ const createBook = async function (req, res) {
     // book details sent through request body
     const data = req.body;
 
-    const { title, excerpt, userId, ISBN, category, subcategory, releasedAt } =
-      data;
+    const {
+      title,
+      excerpt,
+      userId,
+      ISBN,
+      category,
+      subcategory,
+      isDeleted,
+      releasedAt,
+    } = data;
 
     // VALIDATIONS:
 
@@ -24,14 +32,14 @@ const createBook = async function (req, res) {
     if (!isValidReqBody(data)) {
       return res
         .status(400)
-        .send({ status: false, msg: "Please provide the book details" });
+        .send({ status: false, message: "Please provide the book details" });
     }
 
     // if title is empty
     if (!isValid(title)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the title (required field)",
+        message: "Please provide the title (required field)",
       });
     }
     // title duplication check
@@ -39,14 +47,14 @@ const createBook = async function (req, res) {
     if (isDuplicateTitle) {
       return res
         .status(400)
-        .send({ status: true, msg: "Title is already used!" });
+        .send({ status: false, message: "Title is already used!" });
     }
 
     // if excerpt is empty
     if (!isValid(excerpt)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the excerpt (required field)",
+        message: "Please provide the excerpt (required field)",
       });
     }
 
@@ -61,7 +69,7 @@ const createBook = async function (req, res) {
     if (!isValidObjectId(userId)) {
       return res.status(400).send({
         status: false,
-        msg: "userId is invalid!",
+        message: "userId is invalid!",
       });
     }
     // if userId does not exist (in our database)
@@ -69,14 +77,21 @@ const createBook = async function (req, res) {
     if (!userIdInDB) {
       return res
         .status(404)
-        .send({ status: true, msg: "UserId does not exist" });
+        .send({ status: false, message: "UserId does not exist" });
+    }
+    // 📌 AUTHORISATION: if userId (in token) !== userId (in req.body)
+    if (userId !== req.userId) {
+      return res.status(401).send({
+        status: false,
+        message: `Authorisation Failed: You are logged in as ${req.userId} not ${userId}`,
+      });
     }
 
     // if ISBN is empty
     if (!isValid(ISBN)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the ISBN (required field)",
+        message: "Please provide the ISBN (required field)",
       });
     }
     // ISBN duplication check
@@ -84,14 +99,14 @@ const createBook = async function (req, res) {
     if (isDuplicateISBN) {
       return res
         .status(400)
-        .send({ status: false, msg: "ISBN is already used!" });
+        .send({ status: false, message: "ISBN is already used!" });
     }
 
     // if category is empty
     if (!isValid(category)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the category (required field)",
+        message: "Please provide the category (required field)",
       });
     }
 
@@ -99,7 +114,7 @@ const createBook = async function (req, res) {
     if (!isValid(subcategory)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the subcategory (required field)",
+        message: "Please provide the subcategory (required field)",
       });
     }
 
@@ -107,22 +122,22 @@ const createBook = async function (req, res) {
     if (!isValid(releasedAt)) {
       return res.status(400).send({
         status: false,
-        msg: "Please provide the book release date (required field).",
+        message: "Please provide the book release date (required field).",
       });
     }
     // if releasedAt is invalid (format)
     if (!isValidRelAt(releasedAt)) {
       return res.status(400).send({
         status: false,
-        msg: "Please follow the format YYYY-MM-DD for book release date",
+        message: "Please follow the format YYYY-MM-DD for book release date",
       });
     }
 
     // if "isDeleted": true
-    if (!isDeleted) {
+    if (isDeleted) {
       return res.status(400).send({
         status: false,
-        msg: "isDeleted cannot be true during creation!",
+        message: "isDeleted cannot be true during creation!",
       });
     }
 
@@ -130,12 +145,13 @@ const createBook = async function (req, res) {
     delete data.deletedAt;
 
     //creating book
-    const createdBook = await bookModel.create(book);
+    const createdBook = await bookModel.create(data);
 
     // response
     res.status(201).send({
       status: true,
-      msg: createdBook,
+      message: "Sucess",
+      data: createdBook,
     });
   } catch (err) {
     res.status(500).send({ msg: "Internal Server Error", error: err.message });
