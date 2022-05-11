@@ -380,7 +380,7 @@ const updateBook = async function (req, res) {
 
       const updatedBook = await bookModel.findOneAndUpdate(
         { _id: bookId },
-        { title: title, excerpt: excerpt, releasedAt: releasedAt, ISBN: ISBN },
+        {...updateDetails},
         { new: true }
       );
       return res.status(200).send({ status: true, data: updatedBook });
