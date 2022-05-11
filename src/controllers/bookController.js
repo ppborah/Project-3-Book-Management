@@ -147,44 +147,93 @@ const createBook = async function (req, res) {
 
 let getBooks = async function (req, res) {
   try {
-    let query = req.query;
-    let filter = {
-      isDeleted: false,
-    };
-    if (!validator.isValidReqBody(query)) {
-      return res.status(400).send({
-        status: true,
-        message: " Invalid parameters, please provide valid data",
-      });
+    // filters sent through query params
+    const { userId, category, subcategory } = req.query;
+
+    // if userId is entered
+    if (isValid(userId)) {
+      // if userId is invalid
+      if (!isValidObjectId(userId)) {
+        return res.status(400).send({
+          status: false,
+          msg: "userId is invalid!",
+        });
+      }
+      // if userId does not exist (in our database)
+      const userIdInDB = await userModel.findById(userId);
+      if (!userIdInDB) {
+        return res
+          .status(404)
+          .send({ status: true, msg: "UserId does not exist" });
+      }
     }
-    if (query.subcategory) {
-      query.subcategory = { $in: query.subcategory.split(",") };
-    }
-    filter["$or"] = [
-      { userId: query.userId },
-      { category: query.category },
-      { subcategory: query.subcategory },
+
+    //Array containing query params as objects
+    let filtersArr = [
+      { userId: userId?.trim() },
+      { category: category?.trim() },
+      { subcategory: subcategory?.trim() },
     ];
 
-    let filterByquery = await bookModel.find(filter).select({
-      book_id: 1,
-      excerpt: 1,
-      userId: 1,
-      category: 1,
-      releasedAt: 1,
-      reviews: 1,
-    });
-    if (filterByquery.length == 0) {
-      return res.status(404).send({ msg: "Book Not Found" });
+    // filtersArr MANIPULATION:  if an object's "value" === "" or undefined, then, that object is eliminated altogether from filtersArr
+    for (let i = 0; i < filtersArr.length; i++) {
+      let x = filtersArr[i];
+
+      // object's value is required --> Object.values✅ | dot notation❌ (Reason: key is unknown)
+      valueArr = Object.values(x);
+
+      // valueArr is of the form: [value of x Object]
+      if (!valueArr[0]) {
+        filtersArr.splice(i, 1);
+        i--;
+      }
     }
-    const sortedBooks = filterByquery.sort((a, b) =>
-      a.title.localeCompare(b.title)
-    );
-    res
-      .status(200)
-      .send({ status: true, message: "Books list", data: sortedBooks });
+
+    // deleted books should not be accessible
+    filtersArr.push({ isDeleted: false });
+
+    // aggregation pipeline using $match, $project & $sort to get desired result
+    let filteredBooks = await bookModel.aggregate([
+      {
+        $match: { $and: filtersArr },
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          excerpt: 1,
+          userId: 1,
+          category: 1,
+          reviews: 1,
+          releasedAt: 1,
+        },
+      },
+      {
+        $sort: { title: 1 },
+      },
+    ]);
+
+    // if no book satisfies given filters
+    if (!filteredBooks.length && filtersArr.length !== 1) {
+      return res.status(404).send({
+        status: false,
+        msg: "No book satisfies the given filters!",
+      });
+    }
+
+    // if atleast one book satisfies given filter(s) --> if no filters entered: "string interpolation" to use relevant msg
+    let noFilter = "";
+    if (filtersArr.length === 1) {
+      noFilter = "(No filters applied!)"; // if no filters entered
+    }
+    // response
+    res.status(200).send({
+      status: true,
+      msg: `Books list${noFilter}`,
+      data: filteredBooks,
+    });
   } catch (err) {
-    return res.status(500).send({ statuS: false, message: err.message });
+    return res.status(500).send({ status: false, message: err.message });
   }
 };
 
