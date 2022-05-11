@@ -154,7 +154,7 @@ const createBook = async function (req, res) {
       data: createdBook,
     });
   } catch (err) {
-    res.status(500).send({ msg: "Internal Server Error", error: err.message });
+    res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
   }
 };
 
@@ -256,7 +256,7 @@ let getBooks = async function (req, res) {
       data: filteredBooks,
     });
   } catch (err) {
-    return res.status(500).send({ status: false, message: err.message });
+    return res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
   }
 };
 
