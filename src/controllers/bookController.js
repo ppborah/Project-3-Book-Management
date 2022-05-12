@@ -163,101 +163,63 @@ const createBook = async function (req, res) {
 
 let getBooks = async function (req, res) {
   try {
-    // filters sent through query params
-    const { userId, category, subcategory } = req.query;
+    //taking filter in query params
+    let userQuery = req.query;
 
-    // if userId is entered
-    if (isValid(userId)) {
-      // if userId is invalid
-      if (!isValidObjectId(userId)) {
-        return res.status(400).send({
-          status: false,
-          msg: "userId is invalid!",
-        });
-      }
-      // if userId does not exist (in our database)
-      const userIdInDB = await userModel.findById(userId);
-      if (!userIdInDB) {
-        return res
-          .status(404)
-          .send({ status: true, msg: "UserId does not exist" });
-      }
+    //filtering the deleted data
+    let filter = {
+      isDeleted: false,
+    };
+
+    //checking if there is no filter in query params
+    if (!isValidReqBody(userQuery)) {
+      return res.status(400).send({ status: true, message: " Invalid parameters, please provide valid data" })
     }
 
-    //Array containing query params as objects
-    let filtersArr = [
-      { userId: userId?.trim() },
-      { category: category?.trim() },
-      { subcategory: subcategory?.trim() },
-    ];
+    //sending filter through query params
+    const { userId, category, subcategory } = userQuery
+  
+    //userId given by the user
+    if (userId) {
 
-    // filtersArr MANIPULATION:  if an object's "value" === "" or undefined, then, that object is eliminated altogether from filtersArr
-    for (let i = 0; i < filtersArr.length; i++) {
-      let x = filtersArr[i];
+      //checking for if userId if not valid
+      if (!isValid(userId)) {
+        return res.status(400).send({ status: false, message: "Invalid userId" });
+      }
 
-      // object's value is required --> Object.values✅ | dot notation❌ (Reason: key is unknown)
-      valueArr = Object.values(x);
-
-      // valueArr is of the form: [value of x Object]
-      if (!valueArr[0]) {
-        filtersArr.splice(i, 1);
-        i--;
+      //if userId is valid
+      if (isValid(userId)) {
+        filter["userId"] = userId
       }
     }
 
-    // deleted books should not be accessible
-    filtersArr.push({ isDeleted: false });
-
-    // aggregation pipeline using $match, $project & $sort to get desired result
-    let filteredBooks = await bookModel.aggregate([
-      {
-        $match: { $and: filtersArr },
-      },
-      {
-        $project: {
-          _id: 1,
-          title: 1,
-          excerpt: 1,
-          userId: 1,
-          category: 1,
-          reviews: 1,
-          releasedAt: 1,
-        },
-      },
-      {
-        $sort: { title: 1 },
-      },
-    ]);
-
-    // CASE-1: if isDeleted: true for all existing books / no book exists (in the database)
-    if (!filteredBooks.length) {
-      return res.status(404).send({
-        status: false,
-        msg: "No book exists",
-      });
+    //checking for if category is valid
+    if (isValid(category)) {
+      filter["category"] = category.trim()
     }
 
-    // CASE-2: if no book satisfies given filters
-    if (!filteredBooks.length && filtersArr.length !== 1) {
-      return res.status(404).send({
-        status: false,
-        msg: "No book satisfies the given filters!",
-      });
+    //checking subcategory value for valid format (i.e.array of string in model)
+    if (subcategory) {
+      const subCategoryArray = subcategory.trim().split(",").map((s) => s.trim());
+      filter["subcategory"] = { $all: subCategoryArray };
+    }
+    
+    //finding books according to the query given by the user in query params
+    let findBook = await bookModel.find(filter).select({ title: 1, book_id: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 })
+
+    //checking is the findbook is an array and if its length is zero , means empty array
+    if (Array.isArray(findBook) && findBook.length === 0) {
+      return res.status(404).send({ status: false, message: "Books Not Found" });
     }
 
-    // CASE-3: if atleast one book satisfies given filter(s) --> if no filters entered(SUBCASE): "string interpolation" used for relevant msg
-    let noFilter = "";
-    if (filtersArr.length === 1) {
-      noFilter = "(No filters applied!)"; // if no filters entered
-    }
-    // response
-    res.status(200).send({
-      status: true,
-      msg: `Books list${noFilter}`,
-      data: filteredBooks,
-    });
+    //Sorting of data of araay(findbook) by the title value
+    const sortedBooks = findBook.sort((a, b) => a.title.localeCompare(b.title));
+
+    //sending response of sortedBooks
+    res.status(200).send({ status: true, message: "Books list", data: sortedBooks });
+
   } catch (err) {
-    return res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
+    return res.status(500).send({ statuS: false, message: err.message });
   }
 };
 
@@ -265,24 +227,40 @@ let getBooks = async function (req, res) {
 
 let getBooksById = async (req, res) => {
   try {
+    //taking bookId from the user in Path Params
     let bookId = req.params.bookId;
-    if (!validator.isValid(bookId)) {
+
+    //If provided booikId is not valid!
+    if (!isValid(bookId)) {
       res
         .ststus(400)
         .send({ status: true, message: "bookId is required in params" });
     }
-    let findbook = await bookModel.findById(id).select({ _v: 0 })
+
+    //searching for book (document) with the bookId given by user
+    let findbook = await bookModel.findById(bookId).select({ _v: 0 })
+
+    //if no book found
     if (!findbook)
       return res
         .status(404)
         .send({ status: false, msg: `no book found by this BookID:${bookId}` });
-    ;
-    let reviews = await reviewModel.find({ _id: bookId, isDeleted: false });
 
+    //if that book is deleted    
+    if (findbook.isDeleted === true) {
+      return res
+        .status(404)
+        .send({ status: false, msg: "Book already deleted!" });
+    }
+
+    //finding reviews (in array) by bookId
+    let reviews = await reviewModel.find({ _id: bookId, isDeleted: false });
+    
+    //making a new object and adding a new field (reviewsData)
     let booksWithReview = findbook.toObject()
     Object.assign(booksWithReview, { reviewsData: reviews })
 
-
+    //sending successful response with new object
     return res.status(200).send({
       status: true,
       message: "Books list",
