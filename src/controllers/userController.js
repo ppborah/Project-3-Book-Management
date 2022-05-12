@@ -6,6 +6,7 @@ const {
   isValidEmail,
   isValidPincode,
   isValidPassword,
+  isValidReqBody,
 } = require("../validator/validation");
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -16,10 +17,10 @@ const registerUser = async function (req, res) {
     let data = req.body;
 
     // if request body is empty
-    if (Object.keys(data).length === 0) {
+    if (!isValidReqBody(data)) {
       return res
         .status(400)
-        .send({ status: false, msg: " Please enter user details" });
+        .send({ status: false, message: " Please enter user details" });
     }
 
     let title = data.title;
@@ -35,9 +36,10 @@ const registerUser = async function (req, res) {
 
     // if title is empty
     if (isValid(title) === false) {
-      return res
-        .status(400)
-        .send({ status: false, msg: " Please enter title(required field)" });
+      return res.status(400).send({
+        status: false,
+        message: " Please enter title(required field)",
+      });
     }
     // if title is invalid
     // AMBIGUITY: avoid shifting to validator; TITLE is also used for book's title
@@ -45,27 +47,27 @@ const registerUser = async function (req, res) {
     if (!enumArr.includes(title)) {
       return res
         .status(400)
-        .send({ status: false, msg: "Please enter valid title" });
+        .send({ status: false, message: "Please enter valid title" });
     }
 
     // name validation
     if (isValid(name) === false) {
       return res
         .status(400)
-        .send({ status: false, msg: "Please enter name(required field) " });
+        .send({ status: false, message: "Please enter name(required field) " });
     }
 
     // if phone is empty
     if (isValid(phone) === false)
       return res.status(400).send({
         status: false,
-        msg: "Please enter the phone number(required field)",
+        message: "Please enter the phone number(required field)",
       });
     // if phone is invalid
     if (isValidPhone(phone) === false)
       return res.status(400).send({
         status: false,
-        msg: `${phone} is not a valid phone number; Please provide a valid phone number`,
+        message: `${phone} is not a valid phone number; Please provide a valid phone number`,
       });
     // phone duplication check
     let phoneCheck = await userModel.findOne({
@@ -74,19 +76,20 @@ const registerUser = async function (req, res) {
     if (phoneCheck)
       return res
         .status(400)
-        .send({ status: false, msg: "Phone number is already used!" });
+        .send({ status: false, message: "Phone number is already used!" });
 
     // if email is empty
     if (isValid(email) === false) {
-      return res
-        .status(400)
-        .send({ status: false, msg: " Please Enter email(required field)" });
+      return res.status(400).send({
+        status: false,
+        message: " Please Enter email(required field)",
+      });
     }
     // if email is invalid
     if (isValidEmail(email) === false) {
       return res
         .status(400)
-        .send({ status: false, msg: " Please enter valid email" });
+        .send({ status: false, message: " Please enter valid email" });
     }
     // email duplication check
     let emaildb = await userModel.findOne(
@@ -96,15 +99,16 @@ const registerUser = async function (req, res) {
     if (emaildb) {
       return res.status(400).send({
         status: false,
-        msg: "We are sorry; this email is already used",
+        message: "We are sorry; this email is already used",
       });
     }
 
     // is password is empty
     if (isValid(password) === false) {
-      return res
-        .status(400)
-        .send({ status: false, msg: " Please enter password(required field)" });
+      return res.status(400).send({
+        status: false,
+        message: " Please enter password(required field)",
+      });
     }
     // if password is invalid
     if (isValidPassword(password) === false) {
@@ -113,34 +117,38 @@ const registerUser = async function (req, res) {
       else if (password.length > 15) length = "greater than 15 characters";
       return res.status(400).send({
         status: false,
-        msg: `password cannot be ${length}`,
+        message: `password cannot be ${length}`,
       });
     }
 
     // if street only has whitespace characters
     if (street.trim() === 0) {
-      return res.status(400).send({ status: false, msg: "street is invalid" });
+      return res
+        .status(400)
+        .send({ status: false, message: "street is invalid" });
     }
     // if city only has whitespace characters
     if (city.trim() === 0) {
-      return res.status(400).send({ status: false, msg: "city is invalid" });
+      return res
+        .status(400)
+        .send({ status: false, message: "city is invalid" });
     }
     // pincode validation
     if (isValidPincode(pincode) === false) {
       return res
         .status(400)
-        .send({ status: false, msg: "Please enter valid pincode" });
+        .send({ status: false, message: "Please enter valid pincode" });
     }
 
     // registering user
     let registeredUser = await userModel.create(data);
 
     // response
-    res.status(201).send({ status: true, msg: registeredUser });
+    res.status(201).send({ status: true, message: registeredUser });
   } catch (err) {
     res.status(500).send({
       status: false,
-      msg: "Internal Server Error",
+      message: "Internal Server Error",
       error: err.message,
     });
   }
@@ -158,7 +166,7 @@ const loginUser = async function (req, res) {
     if (isValid(email) === false) {
       return res.status(400).send({
         status: false,
-        msg: "Please enter email!",
+        message: "Please enter email!",
       });
     }
 
@@ -166,7 +174,7 @@ const loginUser = async function (req, res) {
     if (isValid(password) === false) {
       return res.status(400).send({
         status: false,
-        msg: "Please enter password!",
+        message: "Please enter password!",
       });
     }
 
@@ -200,12 +208,12 @@ const loginUser = async function (req, res) {
 
     res.status(200).send({
       status: true,
-      msg: "Login Successfull! Token sent in header 'x-api-key'",
+      message: "Login Successfull! Token sent in header 'x-api-key'",
     });
   } catch (err) {
     res.status(500).send({
       status: false,
-      msg: "Internal Server Error",
+      message: "Internal Server Error",
       error: err.message,
     });
   }

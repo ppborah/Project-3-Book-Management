@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bookModel = require("../models/bookModel");
-const mongoose = require("mongoose");
+const { isValidObjectId } = require("../validator/validation");
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ const authentication = async function (req, res, next) {
 
 const authorisation = async function (req, res, next) {
   try {
-    // bookId sent through path variable
+    // bookId sent through path params
     let bookId = req.params.bookId;
 
     // CASE-1: bookId is empty
@@ -50,25 +50,32 @@ const authorisation = async function (req, res, next) {
         .send({ status: false, msg: "Please enter bookId to proceed!" });
     }
     // CASE-2: bookId is not an ObjectId
-    else if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    else if (!isValidObjectId(bookId)) {
       return res.status(400).send({ status: false, msg: "bookId is invalid!" });
     }
-    // CASE-3: bookId is not present in the database
-    let book = await bookModel
-      .findOne({ _id: bookId })
-      .select({ userId: 1, _id: 0 });
+    // CASE-3: bookId does not exist (in our database)
+    let book = await bookModel.findOne({ _id: bookId }); // database call
+    console.log(book);
     if (!book) {
       return res.status(400).send({
         status: false,
         msg: "We are sorry; Given bookId does not exist!",
       });
     }
+    // CASE-4: bookId exists but is deleted (isDeleted: true)
+    if (book && book.isDeleted) {
+      return res.status(404).send({
+        status: false,
+        message: "We are sorry; Given bookId does not exist", // avoided | message: "bookId is deleted" | considering privacy (of user)
+      });
+    }
 
     // Authorisation: userId in token is compared with userId against bookId
     if (req.userId !== book.userId.toString()) {
-      return res
-        .status(401)
-        .send({ status: false, msg: "Authorisation Failed!" });
+      return res.status(401).send({
+        status: false,
+        msg: `Authorisation Failed! You are logged in ${req.userId} not as ${book.userId}`,
+      });
     } else if (req.userId === book.userId.toString()) {
       next();
     }
