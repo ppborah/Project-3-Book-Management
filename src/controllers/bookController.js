@@ -233,7 +233,7 @@ let getBooks = async function (req, res) {
       reviews: 1,
     });
 
-    console.log(findBook);
+    //console.log(findBook);
 
     //checking is the findbook is an array and if its length is zero , means empty array
     if (findBook.length === 0) {

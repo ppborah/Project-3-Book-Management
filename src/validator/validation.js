@@ -58,6 +58,17 @@ const isValidRelAt = function (releasedAt) {
   return pattern.test(releasedAt); // returns a boolean
 };
 
+// review Rating validation
+const isValidRating = function (value){
+  if ( value <= 1 ) {
+      return false
+  } else if ( value >= 5 ) {
+      return false
+  } else {
+      return true
+  }
+}
+
 module.exports = {
   isValidReqBody,
   isValid,
@@ -68,4 +79,5 @@ module.exports = {
   isValidObjectId,
   isValidISBN,
   isValidRelAt,
+  isValidRating
 };
