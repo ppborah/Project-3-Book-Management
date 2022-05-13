@@ -104,7 +104,6 @@ const deleteReview = async function (req, res) {
 
     // CASE-2: if reviewId does not exist (in database)
     let review = await reviewModel.findOne({ _id: reviewId }); // database call (reviewModel)
-    review = review?.toJSON(); // serialises data to correct format
     if (!review) {
       return res.status(400).send({
         status: false,
