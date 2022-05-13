@@ -32,7 +32,7 @@ const createReview = async function (req, res) {
     
     //CASE:1-if no book found
     if (!isValidBookId) {
-      return res.status(404).send({ status: false, msg: "no book available." });
+      return res.status(404).send({ status: false, message: "no book available." });
     }
     
     //CASE:2-if book is available with bookId
@@ -86,13 +86,94 @@ const createReview = async function (req, res) {
   }
 };
 
+//update review function
+const reviewUpdate = async function (req, res) {
+
+  try {
+
+      const bookId = req.params.bookId;
+      const reviewId = req.params.reviewId;
+      
+      //ojectId validation
+      if (!isValidObjectId(bookId)) {
+          return res.status(400).send({ status: false, msg: "bookId is not valid!" });
+      }
+      
+      //objectId validation
+      if (!isValidObjectId(reviewId)) {
+          return res.status(400).send({ status: false, msg: "reviewId is not valid!" });
+      }
+      
+      //Finding book by bookId
+      const availableBook = await bookModel.findOne({ _id: bookId, isDeleted: false });
+      if (!availableBook) {
+          return res.status(404).send({ status: false, msg: "Book Not Found!" });
+      }
+      
+      //finding review by reviewid
+      const availableReview = await reviewModel.findOne({ _id: reviewId, isDeleted: false });
+      if (!availableReview) {
+          return res.status(404).send({ status: false, msg: "Review Not Found!" });
+      }
+      
+      //checkingis review's bookId is same as of given bookId
+      if (availableReview.bookId != availableBook._id) {
+          return res.status(403).send({ status: false, message: "review is not from this book!" })
+      }
+      
+      //taking data in request body for updation
+      const bodyFromReq = req.body
+
+      if (!isValidReqBody(bodyFromReq)) {
+          return res.status(400).send({ status: false, msg: "Please provide review details to update!" });
+      }
+
+      const { reviewedBy, review, rating } = bodyFromReq;
+      
+      //hasOwnProperty will check if request body has that property or not
+      if (bodyFromReq.hasOwnProperty("reviewedBy")) {
+          if (!isValid(reviewedBy)) {
+              return res.status(400).send({ status: false, msg: "reviewedBy is not valid!" });
+          }
+      }
+
+      if (bodyFromReq.hasOwnProperty("review")) {
+          if (!isValid(review)) {
+              return res.status(400).send({ status: false, msg: "review is not valid!" });
+          }
+      }
+
+      if (bodyFromReq.hasOwnProperty("rating")) {
+          if (!isValidRating(rating)) {
+              return res.status(400).send({ status: false, msg: "rating is not valid!" });
+          }
+      }
+      
+      //updating review
+      const updatedReview = await reviewModel.findOneAndUpdate(
+          { _id: reviewId },
+          { ...bodyFromReq },
+          { new: true }
+      );
+
+       const allAvailableReviews = await reviewModel.find({ bookId: bookId, isDeleted: false })
+      
+      //setting a new key in review object
+       availableBook.reviewData = allAvailableReviews;
+      return res.status(200).send({ status: true, data: availableBook });
+
+  } catch (err) {
+      return res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
+  }
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//delete review function
 const deleteReview = async function (req, res) {
   try {
     // reviewId & bookId sent through path params
-    reviewId = req.params.reviewId;
-    bookId = req.params.bookId;
+    const reviewId = req.params.reviewId;
+    const bookId = req.params.bookId;
 
     // CASE-1: if reviewId is not a valid ObjectId
     if (!isValidObjectId(reviewId)) {
@@ -179,4 +260,4 @@ const deleteReview = async function (req, res) {
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-module.exports = { createReview, deleteReview };
+module.exports = { createReview,reviewUpdate, deleteReview };
