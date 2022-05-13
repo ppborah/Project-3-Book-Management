@@ -86,55 +86,93 @@ const createReview = async function (req, res) {
   }
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//delete review function
 const deleteReview = async function (req, res) {
   try {
+    // reviewId & bookId sent through path params
     reviewId = req.params.reviewId;
+    bookId = req.params.bookId;
 
-    // if reviewId is not entered!
-    if (reviewId === ":reviewId") {
+    // CASE-1: if reviewId is not a valid ObjectId
+    if (!isValidObjectId(reviewId)) {
       return res.status(400).send({
         status: false,
-        msg: "Please enter reviewId",
+        message: "reviewId is not a valid ObjectId",
       });
     }
 
-    let reviews = await reviewModel.find({ _id: reviewId });
-
-    // if review does not exist in our database
-    if (reviews.length === 0) {
+    // CASE-2: if reviewId does not exist (in database)
+    let review = await reviewModel.findOne({ _id: reviewId }); // database call (reviewModel)
+    review = review?.toJSON(); // serialises data to correct format
+    if (!review) {
       return res.status(400).send({
         status: false,
-        msg: "review does not exist",
+        message: "review does not exist",
       });
     }
 
-    // if review exists in our database
-    // CASE-1: isDeleted: true
-    if (reviews.isDeleted === true) {
+    // CASE-3: if isDeleted: true for review document
+    if (review.isDeleted === true) {
       return res.status(400).send({
         status: false,
-        msg: "review does not exist",
+        message: "review does not exist",
       });
     }
-    // CASE-2: isDeleted: false
-    if (reviews.isDeleted === false) {
+
+    // CASE-4: if bookId is not a valid ObjectId
+    if (!isValidObjectId(bookId)) {
+      return res.status(400).send({
+        status: false,
+        message: "bookId is not a valid ObjectId",
+      });
+    }
+
+    // CASE-5: if bookId ( in review document) does not exist (in database)
+    let book = await bookModel.findOne({ _id: review.bookId }); // database call (bookModel)
+    if (!book) {
+      return res.status(400).send({
+        status: false,
+        message: "book does not exist",
+      });
+    }
+
+    // CASE-6: if isDeleted: true for book document
+    if (book.isDeleted === true) {
+      return res.status(400).send({
+        status: false,
+        message: "book does not exist",
+      });
+    }
+
+    // CASE-7: Both reviewId, bookId exist in database && isDeleted: false
+    if (review.isDeleted === false && book.isDeleted === false) {
+      // database call (reviewModel)
       await reviewModel.findOneAndUpdate(
         { _id: reviewId },
         {
-          isDeleted: true,
+          $set: { isDeleted: true },
         }
       );
+      // decrementing reviews count
+      book.reviews--;
+      await book.save();
+      // response
       return res.status(200).send({
         status: true,
-        msg: "Deletion successful",
+        message: "Deletion successful",
       });
     }
+
+    // Bad request
+    res.status(400).send({
+      status: false,
+      message: "Bad Request",
+    });
   } catch (err) {
     res.status(500).send({
       status: false,
-      msg: "Internal Server Error",
+      message: "Internal Server Error",
       error: err.message,
     });
   }
