@@ -18,7 +18,7 @@ router.post("/books",middleware.authentication,middleware.authorisation,bookCont
 router.get("/books", middleware.authentication, bookController.getBooks);
 
 //Api for getting books by userId in path params
-router.get("/books/:userId",middleware.authentication,bookController.getBooksById);
+router.get("/books/:bookId",middleware.authentication,bookController.getBooksById);
 
 //Api for updating books by bookId in path params
 router.put("/books/:bookId",middleware.authentication,middleware.authorisation,bookController.updateBook);

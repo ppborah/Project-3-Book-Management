@@ -183,12 +183,12 @@ let getBooks = async function (req, res) {
     };
 
     //checking if there is no filter in query params
-    if (!isValidReqBody(userQuery)) {
-      return res.status(400).send({
-        status: true,
-        message: " Invalid parameters, please provide valid data",
-      });
-    }
+    // if (!isValidReqBody(userQuery)) {
+    //   return res.status(400).send({
+    //     status: true,
+    //     message: " Invalid parameters, please provide valid data",
+    //   });
+    // }
 
     //sending filter through query params
     const { userId, category, subcategory } = userQuery;
@@ -266,14 +266,14 @@ let getBooksById = async (req, res) => {
     let bookId = req.params.bookId;
 
     //If provided booikId is not valid!
-    if (!isValid(bookId)) {
-      res
-        .ststus(400)
+    if (!isValidObjectId(bookId)) {
+      return res
+        .status(400)
         .send({ status: true, message: "bookId is required in params" });
     }
 
     //searching for book (document) with the bookId given by user
-    let findbook = await bookModel.findById(bookId).select({ _v: 0 });
+    let findbook = await bookModel.findById({_id:bookId}).select({ _v: 0 });
 
     //if no book found
     if (!findbook)
@@ -290,11 +290,13 @@ let getBooksById = async (req, res) => {
     }
 
     //finding reviews (in array) by bookId
-    let reviews = await reviewModel.find({ _id: bookId, isDeleted: false });
+    let reviews = await reviewModel.find({ bookId: bookId , isDeleted: false });
+    console.log(reviews)
 
     //making a new object and adding a new field (reviewsData)
     let booksWithReview = findbook.toObject();
     Object.assign(booksWithReview, { reviewsData: reviews });
+    console.log(booksWithReview)
 
     //sending successful response with new object
     return res.status(200).send({

@@ -7,6 +7,7 @@ const {
   isValidRelAt,
   isValidISBN,
   isValidRating,
+  isValidName
 } = require("../validator/validation");
 
 //create review function
@@ -41,6 +42,10 @@ const createReview = async function (req, res) {
       if (!isValid(reviewedBy)) {
         return res.status(400).send({ status: false, message: "reviewedBy should be in valid format" })
       }
+      // if(!isValidName(reviewedBy)){
+      //   return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
+      // }
+      
     }
 
     //checking for if user is giving reviewe property in request body
@@ -65,7 +70,7 @@ const createReview = async function (req, res) {
     }
     
     //destructuring response body(the property we want send to view in response)
-    const responseBody = { bookId: bookId, reviewedBy: reviewedBy, rating: rating, reviewedAt: releasedDate };
+    const responseBody = { bookId: bookId, reviewedBy: reviewedBy, rating: rating, reviewedAt: releasedDate, review:review };
 
     //creating review
     const reviewCreated = await reviewModel.create(responseBody);

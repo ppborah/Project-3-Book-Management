@@ -11,7 +11,7 @@ const isValidReqBody = function (reqbody) {
 // string validation (required: true)
 const isValid = function (value) {
   if (typeof value === "undefined" || typeof value === null) return false;
-  if (typeof value === "string" && value.trim().length == 0) return false;
+  if (typeof value === "string" || value.trim().length == 0) return false; 
   return true;
 };
 
@@ -23,7 +23,7 @@ const isValidEmail = function (email) {
 
 // phone validation
 const isValidPhone = function (phone) {
-  const pattern = /^(\+\d{1,3}[- ]?)?\d{10}$/;
+  const pattern = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[6789]\d{9}$/;
   return pattern.test(phone); // returns a boolean
 };
 
@@ -58,11 +58,17 @@ const isValidRelAt = function (releasedAt) {
   return pattern.test(releasedAt); // returns a boolean
 };
 
+//reviewedBy validation
+const isValidName = function ( value ){
+  const pattern =  /^[a-zA-Z,'.\-\s]*$/;
+  return pattern.test(value);
+}
+
 // review Rating validation
 const isValidRating = function (value){
-  if ( value <= 1 ) {
+  if ( value < 1 ) {
       return false
-  } else if ( value >= 5 ) {
+  } else if ( value > 5 ) {
       return false
   } else {
       return true
@@ -79,5 +85,6 @@ module.exports = {
   isValidObjectId,
   isValidISBN,
   isValidRelAt,
-  isValidRating
+  isValidRating,
+  isValidName
 };
