@@ -227,6 +227,12 @@ const deleteReview = async function (req, res) {
 
     // CASE-7: Both reviewId, bookId exist in database && isDeleted: false
     if (review.isDeleted === false && book.isDeleted === false) {
+      if (review.bookId !== bookId) {
+        return res.status.send({
+          status: false,
+          message: `review is not from ${book.title}`,
+        });
+      }
       // database call (reviewModel)
       await reviewModel.findOneAndUpdate(
         { _id: reviewId },
