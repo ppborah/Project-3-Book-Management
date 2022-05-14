@@ -59,12 +59,7 @@ const createReview = async function (req, res) {
     //useing new Date function to get same date at which the review is posted with time
     const releasedDate = new Date()
     
-    //CASE:1-checking for mandatory field rating
-    if (!isValid(rating)) {
-      return res.status(400).send({ status: false, message: "plesae gives rating" }); // rating is must
-    }
-    
-    //CASE:2-check if rating is between minimun or maximum value
+    //check if rating is between minimun or maximum value
     if (!isValidRating(rating)) {
       return res.status(400).send({ status: false, message: "You have to give rating between 1 to 5 (1 or 5 is included)" })
     }
