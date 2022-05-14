@@ -42,9 +42,9 @@ const createReview = async function (req, res) {
       if (!isValid(reviewedBy)) {
         return res.status(400).send({ status: false, message: "reviewedBy should be in valid format" })
       }
-      // if(!isValidName(reviewedBy)){
-      //   return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
-      // }
+      if(!isValidName(reviewedBy)){
+        return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
+      }
       
     }
 
@@ -139,6 +139,9 @@ const reviewUpdate = async function (req, res) {
       if (bodyFromReq.hasOwnProperty("reviewedBy")) {
           if (!isValid(reviewedBy)) {
               return res.status(400).send({ status: false, msg: "reviewedBy is not valid!" });
+          }
+          if(!isValidName(reviewedBy)){
+            return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
           }
       }
 
