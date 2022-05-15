@@ -49,12 +49,16 @@ const registerUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Please enter valid title" });
     }
-
-    // name validation
+    
+    // if phone is empty
     if (isValid(name) === false) {
       return res
         .status(400)
         .send({ status: false, message: "Please enter name(required field) " });
+    }
+    // name validation
+    if (!isValidName(name)) {
+      return res.status(400).send({ status: false, msg: "plesae give a valid name" });
     }
 
     // if phone is empty

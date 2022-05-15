@@ -18,6 +18,12 @@ const createReview = async function (req, res) {
   try {
     //taking data in request body by the user
     const reviewData = req.body;
+    // if request body is empty
+    if (!isValidReqBody(reviewData)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Please provide the book details" });
+    }
 
     //taking bookId in path params of which user want to review 
     const bookId = req.params.bookId;
@@ -31,23 +37,23 @@ const createReview = async function (req, res) {
     const { reviewedBy, rating, review } = reviewData;
 
     //finding book by bookId in book collection
-    const isValidBookId = await bookModel.findOne({ _id : bookId , isDeleted : false,});
-    
+    const isValidBookId = await bookModel.findOne({ _id: bookId, isDeleted: false, });
+
     //CASE:1-if no book found
     if (!isValidBookId) {
       return res.status(404).send({ status: false, message: "no book available." });
     }
-    
+
     //CASE:2-if book is available with bookId
     //checking for if user is giving reviewedBy property in request body
     if (reviewData.hasOwnProperty('reviewedBy')) {
       if (!isValid(reviewedBy)) {
         return res.status(400).send({ status: false, message: "reviewedBy should be in valid format" })
       }
-      if(!isValidName(reviewedBy)){
+      if (!isValidName(reviewedBy)) {
         return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
       }
-      
+
     }
 
     //checking for if user is giving reviewe property in request body
@@ -57,27 +63,27 @@ const createReview = async function (req, res) {
       }
 
     }
-    
+
     //useing new Date function to get same date at which the review is posted with time
     const releasedDate = new Date()
-    
+
     //check if rating is between minimun or maximum value
     if (!isValidRating(rating)) {
       return res.status(400).send({ status: false, message: "You have to give rating between 1 to 5 (1 or 5 is included)" })
     }
-    
+
     //destructuring response body(the property we want send to view in response)
-    const responseBody = { bookId: bookId, reviewedBy: reviewedBy, rating: rating, reviewedAt: releasedDate, review:review };
+    const responseBody = { bookId: bookId, reviewedBy: reviewedBy, rating: rating, reviewedAt: releasedDate, review: review };
 
     //creating review
     const reviewCreated = await reviewModel.create(responseBody);
 
     //finding that created review with reviewId
     const findReviewId = await reviewModel.findById(reviewCreated._id).select({ isDeleted: 0, createdAt: 0, updatedAt: 0, __v: 0, })
-    
+
     //sending rersponse
     res.status(201).send({ status: true, message: "Review created successfully", data: findReviewId });
-    
+
     //finding book with bookId and updting its review count
     const udatedBookReview = await bookModel.findOneAndUpdate(
       { _id: bookId },
@@ -93,81 +99,81 @@ const reviewUpdate = async function (req, res) {
 
   try {
 
-      const bookId = req.params.bookId;
-      const reviewId = req.params.reviewId;
-      
-      //ojectId validation
-      if (!isValidObjectId(bookId)) {
-          return res.status(400).send({ status: false, msg: "bookId is not valid!" });
-      }
-      
-      //objectId validation
-      if (!isValidObjectId(reviewId)) {
-          return res.status(400).send({ status: false, msg: "reviewId is not valid!" });
-      }
-      
-      //Finding book by bookId
-      const availableBook = await bookModel.findOne({ _id: bookId, isDeleted: false });
-      if (!availableBook) {
-          return res.status(404).send({ status: false, msg: "Book Not Found!" });
-      }
-      
-      //finding review by reviewid
-      const availableReview = await reviewModel.findOne({ _id: reviewId, isDeleted: false });
-      if (!availableReview) {
-          return res.status(404).send({ status: false, msg: "Review Not Found!" });
-      }
-      
-      //checkingis review's bookId is same as of given bookId
-      if (availableReview.bookId != bookId) {
-          return res.status(403).send({ status: false, message: "review is not from this book!" })
-        }
-      //taking data in request body for updation
-      const bodyFromReq = req.body
+    const bookId = req.params.bookId;
+    const reviewId = req.params.reviewId;
 
-      if (!isValidReqBody(bodyFromReq)) {
-          return res.status(400).send({ status: false, msg: "Please provide review details to update!" });
-      }
+    //ojectId validation
+    if (!isValidObjectId(bookId)) {
+      return res.status(400).send({ status: false, msg: "bookId is not valid!" });
+    }
 
-      const { reviewedBy, review, rating } = bodyFromReq;
-      
-      //hasOwnProperty will check if request body has that property or not
-      if (bodyFromReq.hasOwnProperty("reviewedBy")) {
-          if (!isValid(reviewedBy)) {
-              return res.status(400).send({ status: false, msg: "reviewedBy is not valid!" });
-          }
-          if(!isValidName(reviewedBy)){
-            return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
-          }
-      }
+    //objectId validation
+    if (!isValidObjectId(reviewId)) {
+      return res.status(400).send({ status: false, msg: "reviewId is not valid!" });
+    }
 
-      if (bodyFromReq.hasOwnProperty("review")) {
-          if (!isValid(review)) {
-              return res.status(400).send({ status: false, msg: "review is not valid!" });
-          }
-      }
+    //Finding book by bookId
+    const availableBook = await bookModel.findOne({ _id: bookId, isDeleted: false });
+    if (!availableBook) {
+      return res.status(404).send({ status: false, msg: "Book Not Found!" });
+    }
 
-      if (bodyFromReq.hasOwnProperty("rating")) {
-          if (!isValidRating(rating)) {
-              return res.status(400).send({ status: false, msg: "rating is not valid!" });
-          }
-      }
-      
-      //updating review
-      const updatedReview = await reviewModel.findOneAndUpdate(
-          { _id: reviewId },
-          { ...bodyFromReq },
-          { new: true }
-      );
+    //finding review by reviewid
+    const availableReview = await reviewModel.findOne({ _id: reviewId, isDeleted: false });
+    if (!availableReview) {
+      return res.status(404).send({ status: false, msg: "Review Not Found!" });
+    }
 
-       const allAvailableReviews = await reviewModel.find({ bookId: bookId, isDeleted: false })
-      
-      //setting a new key in review object
-       availableBook.reviewData = allAvailableReviews;
-      return res.status(200).send({ status: true, data: availableBook });
+    //checkingis review's bookId is same as of given bookId
+    if (availableReview.bookId != bookId) {
+      return res.status(403).send({ status: false, message: "review is not from this book!" })
+    }
+    //taking data in request body for updation
+    const bodyFromReq = req.body
+
+    if (!isValidReqBody(bodyFromReq)) {
+      return res.status(400).send({ status: false, msg: "Please provide review details to update!" });
+    }
+
+    const { reviewedBy, review, rating } = bodyFromReq;
+
+    //hasOwnProperty will check if request body has that property or not
+    if (bodyFromReq.hasOwnProperty("reviewedBy")) {
+      if (!isValid(reviewedBy)) {
+        return res.status(400).send({ status: false, msg: "reviewedBy is not valid!" });
+      }
+      if (!isValidName(reviewedBy)) {
+        return res.status(400).send({ status: false, msg: "plesae give a valid reviewedBy name" });
+      }
+    }
+
+    if (bodyFromReq.hasOwnProperty("review")) {
+      if (!isValid(review)) {
+        return res.status(400).send({ status: false, msg: "review is not valid!" });
+      }
+    }
+
+    if (bodyFromReq.hasOwnProperty("rating")) {
+      if (!isValidRating(rating)) {
+        return res.status(400).send({ status: false, msg: "rating is not valid!" });
+      }
+    }
+
+    //updating review
+    const updatedReview = await reviewModel.findOneAndUpdate(
+      { _id: reviewId },
+      { ...bodyFromReq },
+      { new: true }
+    );
+
+    const allAvailableReviews = await reviewModel.find({ bookId: bookId, isDeleted: false })
+
+    //setting a new key in review object
+    availableBook.reviewData = allAvailableReviews;
+    return res.status(200).send({ status: true, data: availableBook });
 
   } catch (err) {
-      return res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
+    return res.status(500).send({ status: false, message: "Internal Server Error", error: err.message });
   }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,4 +276,4 @@ const deleteReview = async function (req, res) {
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-module.exports = { createReview,reviewUpdate, deleteReview };
+module.exports = { createReview, reviewUpdate, deleteReview };
