@@ -29,11 +29,8 @@ router.delete("/books/:bookId",middleware.authentication,middleware.authorisatio
 //Api for posting review  by bookId in path params
 router.post("/books/:bookId/review", reviewController.createReview);
 
-//Api for updating review  by bookId and review id in path params
-router.post("/books/:bookId/review/:reviewId", reviewController.createReview);
-
 //Api for deleting review  by bookId and review id in path params
-router.put("/books/:bookId/review/:reviewId", reviewController.createReview);
+router.put("/books/:bookId/review/:reviewId", reviewController.reviewUpdate);
 
 router.delete("/books/:bookId/review/:reviewId", reviewController.deleteReview);
 

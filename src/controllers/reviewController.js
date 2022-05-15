@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose');
 const bookModel = require('../models/bookModel');
 const reviewModel = require("../models/reviewModel");
 const {
@@ -9,6 +10,7 @@ const {
   isValidRating,
   isValidName
 } = require("../validator/validation");
+const ObjectId = mongoose.Types.ObjectId
 
 //create review function
 
@@ -117,10 +119,10 @@ const reviewUpdate = async function (req, res) {
       }
       
       //checkingis review's bookId is same as of given bookId
-      if (availableReview.bookId != availableBook._id) {
+      if ((availableReview.bookId).toString() != (availableBook._id).toString()) {
+        console.log("ho")
           return res.status(403).send({ status: false, message: "review is not from this book!" })
-      }
-      
+        }
       //taking data in request body for updation
       const bodyFromReq = req.body
 

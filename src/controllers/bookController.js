@@ -196,7 +196,7 @@ let getBooks = async function (req, res) {
     //userId given by the user
     if (userId) {
       //checking for if userId if not valid
-      if (!isValid(userId)) {
+      if (!isValidObjectId(userId)) {
         return res
           .status(400)
           .send({ status: false, message: "Invalid userId" });
