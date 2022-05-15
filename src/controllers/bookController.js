@@ -119,6 +119,19 @@ const createBook = async function (req, res) {
       });
     }
 
+     // if subcategory is an array then validating each element
+     if (Array.isArray(subcategory)) {
+      for (let i = 0; i < subcategory.length; i++) {
+        element = subcategory[i];
+        if (!isValid(element)) {
+          return res.status(400).send({
+            status: false,
+            message: "subcategory is required format like: [Fiction,Classic]",
+          });
+        }
+      }
+    }
+
     // if subcategory is empty
     if (!isValidSubcategory(subcategory)) {
       return res.status(400).send({
