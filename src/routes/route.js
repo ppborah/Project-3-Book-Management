@@ -1,23 +1,25 @@
 const express = require("express");
 const router = express.Router();
+
 const userController = require("../controllers/userController");
 const bookController = require("../controllers/bookController");
 const reviewController = require("../controllers/reviewController");
+
 const middleware = require("../middleware/auth");
 
 //Api for creating user
-router.post("/user", userController.registerUser);
+router.post("/register", userController.registerUser);
 
 //Api for login user
 router.post("/login", userController.loginUser);
 
 //Api for posting books
-router.post("/books",middleware.authentication,middleware.authorisation,bookController.createBook);
+router.post("/books",middleware.authentication,bookController.createBook);
 
 //Api for getting books by query params
 router.get("/books", middleware.authentication, bookController.getBooks);
 
-//Api for getting books by userId in path params
+//Api for getting books by bookId in path params
 router.get("/books/:bookId",middleware.authentication,bookController.getBooksById);
 
 //Api for updating books by bookId in path params
@@ -29,9 +31,10 @@ router.delete("/books/:bookId",middleware.authentication,middleware.authorisatio
 //Api for posting review  by bookId in path params
 router.post("/books/:bookId/review", reviewController.createReview);
 
-//Api for deleting review  by bookId and review id in path params
+//Api for updating review  by bookId and review id in path params
 router.put("/books/:bookId/review/:reviewId", reviewController.reviewUpdate);
 
+//Api for deleting review  by bookId and review id in path params
 router.delete("/books/:bookId/review/:reviewId", reviewController.deleteReview);
 
 

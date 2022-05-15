@@ -5,34 +5,36 @@ const { isValidObjectId } = require("../validator/validation");
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const authentication = async function (req, res, next) {
-  // token sent in request header 'x-api-key'
-  token = req.headers["x-api-key"];
-
-  // if token is not provided
-  if (!token)
-    return res.status(400).send({
-      status: false,
-      msg: "Token required! Please login to generate token",
-    });
-
   try {
-    // if token is invalid
-    let decodedToken = jwt.verify(token, "Group14", { ignoreExpiration: true });
-    if (!decodedToken) {
-      return res.status(401).send({ status: false, msg: "token is invalid" });
-    }
-    if (Date.now() > decodedToken.exp * 1000) {
-      return res.status(401).send({
-        status: false,
-        msg: "Session Expired",
-      });
-    }
-    // if token is valid
-    req.userId = decodedToken.userId;
+    // token sent in request header 'x-api-key'
+    token = req.headers["x-api-key"];
 
-    next();
+    // if token is not provided
+    if (!token) {
+      return res.status(400).send({ status: false, msg: "Token required! Please login to generate token" });
+    }
+
+    jwt.verify(token, "Group14", { ignoreExpiration: true }, function (error, decodedToken) {
+      // if token is not valid
+      if (error) {
+        return res.status(400).send({ status: false, msg: "Token is invalid!" });
+
+        // if token is valid
+      } else {
+        // checking if token session expired
+        if (Date.now() > decodedToken.exp * 1000) {
+          return res.status(401).send({ status: false, msg: "Session Expired" });
+        }
+        //exposing decoded token userId in request for everywhere access
+        req.userId = decodedToken.userId;
+        next();
+
+      }
+    }
+    )
+
   } catch (err) {
-    res.status(401).send({ status: false, msg: "Authentication Failed" });
+    res.status(500).send({ msg: "Internal Server Error", error: err.message });
   }
 };
 
