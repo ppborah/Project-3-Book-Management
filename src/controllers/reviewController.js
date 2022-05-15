@@ -119,8 +119,7 @@ const reviewUpdate = async function (req, res) {
       }
       
       //checkingis review's bookId is same as of given bookId
-      if ((availableReview.bookId).toString() != (availableBook._id).toString()) {
-        console.log("ho")
+      if (availableReview.bookId != bookId) {
           return res.status(403).send({ status: false, message: "review is not from this book!" })
         }
       //taking data in request body for updation
@@ -233,7 +232,7 @@ const deleteReview = async function (req, res) {
     // CASE-7: Both reviewId, bookId exist in database && isDeleted: false
     if (review.isDeleted === false && book.isDeleted === false) {
       if (review.bookId !== bookId) {
-        return res.status.send({
+        return res.status(403).send({
           status: false,
           message: `review is not from ${book.title}`,
         });
