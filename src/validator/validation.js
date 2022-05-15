@@ -11,8 +11,15 @@ const isValidReqBody = function (reqbody) {
 // string validation (required: true)
 const isValid = function (value) {
   if (typeof value === "undefined" || typeof value === null) return false;
-  if (typeof value === "string" && value.trim().length == 0) return false; 
-  if (typeof value === "string" ) return true;
+  if (typeof value === "string" && value.trim().length == 0) return false;
+  if (typeof value === "string") return true;
+};
+
+// subcategory validation (required: true)
+const isValidSubcategory = function (value) {
+  if (typeof value === "undefined" || typeof value === null) return false;
+  if (typeof value === "string" && value.trim().length == 0) return false;
+  if (typeof value == "object" && Array.isArray(value) == true) return true;
 };
 
 // email validation
@@ -59,25 +66,26 @@ const isValidRelAt = function (releasedAt) {
 };
 
 //reviewedBy validation
-const isValidName = function ( value ){
-  const pattern =  /^[a-zA-Z,'.\-\s]*$/;
+const isValidName = function (value) {
+  const pattern = /^[a-zA-Z,'.\-\s]*$/;
   return pattern.test(value);
 }
 
 // review Rating validation
-const isValidRating = function (value){
-  if ( value < 1 ) {
-      return false
-  } else if ( value > 5 ) {
-      return false
+const isValidRating = function (value) {
+  if (value < 1) {
+    return false
+  } else if (value > 5) {
+    return false
   } else {
-      return true
+    return true
   }
 }
 
 module.exports = {
   isValidReqBody,
   isValid,
+  isValidSubcategory,
   isValidEmail,
   isValidPhone,
   isValidPincode,

@@ -2,6 +2,7 @@ const bookModel = require("../models/bookModel");
 const {
   isValidReqBody,
   isValid,
+  isValidSubcategory,
   isValidObjectId,
   isValidRelAt,
   isValidISBN,
@@ -119,7 +120,7 @@ const createBook = async function (req, res) {
     }
 
     // if subcategory is empty
-    if (!isValid(subcategory)) {
+    if (!isValidSubcategory(subcategory)) {
       return res.status(400).send({
         status: false,
         message: "Please provide the subcategory (required field)",
