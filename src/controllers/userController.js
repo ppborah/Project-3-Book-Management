@@ -2,6 +2,7 @@ const userModel = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const {
   isValid,
+  isValidName,
   isValidPhone,
   isValidEmail,
   isValidPincode,
@@ -49,7 +50,7 @@ const registerUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Please enter valid title" });
     }
-    
+
     // if phone is empty
     if (isValid(name) === false) {
       return res
