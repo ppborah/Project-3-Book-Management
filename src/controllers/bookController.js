@@ -126,7 +126,7 @@ const createBook = async function (req, res) {
         if (!isValid(element)) {
           return res.status(400).send({
             status: false,
-            message: "subcategory is required format like: [Fiction,Classic]",
+            message: 'subcategory is (required field) format like: ["Fiction","Classic"]',
           });
         }
       }
