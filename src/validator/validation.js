@@ -42,10 +42,10 @@ const isValidPincode = function (pincode) {
 
 //password validation
 const isValidPassword = function (password) {
-  if (!(8 < password.length < 15)) {
-    return false;
+  if (password.length >= 8 && password.length <= 15) {
+    return true;
   }
-  return true;
+  return false;
 };
 
 // ObjectId validation
@@ -69,18 +69,18 @@ const isValidRelAt = function (releasedAt) {
 const isValidName = function (value) {
   const pattern = /^[a-zA-Z,'.\-\s]*$/;
   return pattern.test(value);
-}
+};
 
 // review Rating validation
 const isValidRating = function (value) {
   if (value < 1) {
-    return false
+    return false;
   } else if (value > 5) {
-    return false
+    return false;
   } else {
-    return true
+    return true;
   }
-}
+};
 
 module.exports = {
   isValidReqBody,
@@ -94,5 +94,5 @@ module.exports = {
   isValidISBN,
   isValidRelAt,
   isValidRating,
-  isValidName
+  isValidName,
 };

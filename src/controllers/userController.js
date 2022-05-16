@@ -59,7 +59,9 @@ const registerUser = async function (req, res) {
     }
     // name validation
     if (!isValidName(name)) {
-      return res.status(400).send({ status: false, msg: "plesae give a valid name" });
+      return res
+        .status(400)
+        .send({ status: false, msg: "plesae give a valid name" });
     }
 
     // if phone is empty
@@ -115,6 +117,7 @@ const registerUser = async function (req, res) {
         message: " Please enter password(required field)",
       });
     }
+
     // if password is invalid
     if (isValidPassword(password) === false) {
       let length = "";
@@ -126,23 +129,25 @@ const registerUser = async function (req, res) {
       });
     }
 
-    // if street only has whitespace characters
-    if (street.trim() === 0) {
-      return res
-        .status(400)
-        .send({ status: false, message: "street is invalid" });
-    }
-    // if city only has whitespace characters
-    if (city.trim() === 0) {
-      return res
-        .status(400)
-        .send({ status: false, message: "city is invalid" });
-    }
-    // pincode validation
-    if (isValidPincode(pincode) === false) {
-      return res
-        .status(400)
-        .send({ status: false, message: "Please enter valid pincode" });
+    if (data.address) {
+      // if street only has whitespace characters
+      if (!street?.trim()) {
+        return res
+          .status(400)
+          .send({ status: false, message: "street is invalid" });
+      }
+      // if city only has whitespace characters
+      if (!city?.trim()) {
+        return res
+          .status(400)
+          .send({ status: false, message: "city is invalid" });
+      }
+      // pincode validation
+      if (isValidPincode(pincode) === false) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Please enter valid pincode" });
+      }
     }
 
     // registering user
