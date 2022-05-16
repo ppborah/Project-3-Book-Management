@@ -64,7 +64,7 @@ const createReview = async function (req, res) {
       if (!isValidName(reviewedBy)) {
         return res
           .status(400)
-          .send({ status: false, msg: "plesae give a valid reviewedBy name" });
+          .send({ status: false, message: "plesae give a valid reviewedBy name" });
       }
     }
 
@@ -73,13 +73,16 @@ const createReview = async function (req, res) {
       if (!isValid(review)) {
         return res
           .status(400)
-          .send({ status: false, msg: "plesae give a valid  book review" }); //review is must
+          .send({ status: false, message: "plesae give a valid  book review" }); //review is must
       }
     }
 
     //useing new Date function to get same date at which the review is posted with time
     const releasedDate = new Date();
-
+    
+    if(!rating){
+      return res.status(400).send({ status:false , message: "please provide rating"})
+    }
     //check if rating is between minimun or maximum value
     if (!isValidRating(rating)) {
       return res.status(400).send({
