@@ -221,8 +221,10 @@ const reviewUpdate = async function (req, res) {
     });
 
     //setting a new key in review object
-    availableBook.reviewData = allAvailableReviews;
-    return res.status(200).send({ status: true, data: availableBook });
+    let availableBook1 = availableBook.toJSON();
+    availableBook1.reviewData = allAvailableReviews;
+
+    return res.status(200).send({ status: true, data: availableBook1 });
   } catch (err) {
     return res.status(500).send({
       status: false,
